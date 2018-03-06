@@ -1,0 +1,7 @@
+# sudo docker build -t ejabberd:17.01-1 -f patch/17.01 .
+# sudo docker tag ejabberd:17.01-1 ejabberd:17.01.latest
+FROM rroemhild/ejabberd:17.01-1
+MAINTAINER azhao <azhao.1981@gmail.com>
+
+ENV PATH=$PATH:/usr/local/sbin
+ADD ./run.sh /sbin/run

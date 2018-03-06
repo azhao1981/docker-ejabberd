@@ -1,15 +1,18 @@
+# docker build -t ejabberd:17.04.uddev .
 FROM debian:jessie
-MAINTAINER Rafael Römhild <rafael@roemhild.de>
+MAINTAINER azhao <azhao.1981@gmail.com>
+
+COPY ali.apt.source.list /etc/apt/sources.list
 
 ENV EJABBERD_BRANCH=17.04 \
     EJABBERD_USER=ejabberd \
     EJABBERD_HTTPS=true \
     EJABBERD_STARTTLS=true \
     EJABBERD_S2S_SSL=true \
-    EJABBERD_HOME=/opt/ejabberd \
-    EJABBERD_DEBUG_MODE=false \
+    EJABBERD_HOME=/srv/ejabberd \
+    EJABBERD_DEBUG_MODE=true \
     HOME=$EJABBERD_HOME \
-    PATH=$EJABBERD_HOME/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    PATH=$EJABBERD_HOME/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/sbin \
     DEBIAN_FRONTEND=noninteractive \
     XMPP_DOMAIN=localhost \
     # Set default locale for the environment
@@ -36,6 +39,7 @@ RUN set -x \
         libyaml-dev \
         libsqlite3-dev \
         erlang-src erlang-dev \
+        net-tools \
     ' \
     && requiredAptPackages=' \
         locales \
@@ -52,7 +56,7 @@ RUN set -x \
         imagemagick \
     ' \
     && apt-key adv \
-        --keyserver keys.gnupg.net \
+        --keyserver hkp://keyserver.ubuntu.com:80  \
         --recv-keys 434975BD900CCBE4F7EE1B1ED208507CA14F4FCA \
     && apt-get update \
     && apt-get install -y $buildDeps $requiredAptPackages --no-install-recommends \
@@ -61,7 +65,10 @@ RUN set -x \
     && /usr/sbin/update-locale LANG=C.UTF-8 \
     && echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen \
     && locale-gen \
-    && cd /tmp \
+    && /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && cd /srv \
+    && mkdir source \
+    && cd source \
     && git clone https://github.com/processone/ejabberd.git \
         --branch $EJABBERD_BRANCH --single-branch --depth=1 \
     && cd ejabberd \
@@ -80,12 +87,8 @@ RUN set -x \
     && mkdir $EJABBERD_HOME/database \
     && mkdir $EJABBERD_HOME/module_source \
     && cd $EJABBERD_HOME \
-    && rm -rf /tmp/ejabberd \
-    && rm -rf /etc/ejabberd \
     && ln -sf $EJABBERD_HOME/conf /etc/ejabberd \
-    && chown -R $EJABBERD_USER: $EJABBERD_HOME \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get purge -y --auto-remove $buildDeps
+    && chown -R $EJABBERD_USER: $EJABBERD_HOME
 
 # Wrapper for setting config on disk from environment
 # allows setting things like XMPP domain at runtime
@@ -97,7 +100,7 @@ ADD https://raw.githubusercontent.com/rankenstein/ejabberd-auth-mysql/master/aut
 RUN chmod a+rx $EJABBERD_HOME/scripts/lib/auth_mysql.py
 
 # Add config templates
-ADD ./conf /opt/ejabberd/conf
+ADD ./conf /srv/ejabberd/conf
 
 # Continue as user
 USER $EJABBERD_USER

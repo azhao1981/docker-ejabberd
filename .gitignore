@@ -32,7 +32,7 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-
+/tmp
 
 ### Vim ###
 [._]*.s[a-w][a-z]

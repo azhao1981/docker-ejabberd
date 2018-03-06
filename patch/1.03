@@ -1,0 +1,14 @@
+# sudo docker build -t ejabberd:17.04.uddev.v1.03 -f patch/1.03 .
+# sudo docker tag ejabberd:17.04.uddev.v1.03 ejabberd:17.04.latest
+FROM ejabberd:17.04.uddev
+MAINTAINER azhao <azhao.1981@gmail.com>
+
+USER root
+RUN set -x \
+  &&  apt-get update \
+  &&  apt-get install vim -y
+ENV PATH=$PATH:/usr/local/sbin
+ADD ./run.sh /sbin/run
+ADD ./ebin/ejabberd_listener.beam /usr/local/lib/ejabberd-17.04/ebin/ejabberd_listener.beam
+
+USER ejabberd
